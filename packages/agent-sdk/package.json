@@ -1,0 +1,26 @@
+{
+  "name": "@meimaohouse/agent-sdk",
+  "version": "0.1.0",
+  "description": "子 Agent 接入 SDK：任务协议信封 + SubAgent 基类 + 模型工厂（厂商可插拔）",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@strands-agents/sdk": "^1.13.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@meimaohouse/chef-agent",
+  "version": "0.1.0",
+  "description": "厨师 Agent（厨房域）：冰箱库存、采购下单、安全检查、饮食数据",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@meimaohouse/agent-sdk": "*",
+    "@strands-agents/sdk": "^1.13.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "typescript": "^5.6.0"
+  }
+}
