@@ -16,7 +16,7 @@ import type { Model } from '@strands-agents/sdk'
 export type ModelInstance = Model
 
 export interface ModelEnv {
-  /** 厂商名：bedrock | openai（缺省读环境变量 MODEL_PROVIDER） */
+  /** 厂商名：bedrock | openai | ollama（缺省读环境变量 MODEL_PROVIDER） */
   provider?: string
   /** Bedrock 区域（缺省 AWS_REGION） */
   bedrockRegion?: string
@@ -24,6 +24,10 @@ export interface ModelEnv {
   bedrockModelId?: string
   /** OpenAI API Key（缺省 OPENAI_API_KEY） */
   openaiApiKey?: string
+  /** Ollama 服务地址（缺省 OLLAMA_BASE_URL，默认 http://localhost:11434/api） */
+  ollamaBaseURL?: string
+  /** Ollama 模型名（缺省 OLLAMA_MODEL_ID） */
+  ollamaModelId?: string
 }
 
 export class ModelNotConfiguredError extends Error {
@@ -52,11 +56,13 @@ export async function createModel(env: ModelEnv = {}): Promise<ModelInstance> {
       return loadBedrock(env)
     case 'openai':
       return loadOpenAI(env)
+    case 'ollama':
+      return loadOllama(env)
     case '':
       throw new ModelNotConfiguredError()
     default:
       throw new Error(
-        `未知模型厂商: "${provider}"（当前支持: bedrock, openai；其他厂商请扩展 createModel）`,
+        `未知模型厂商: "${provider}"（当前支持: bedrock, openai, ollama；其他厂商请扩展 createModel）`,
       )
   }
 }
@@ -80,6 +86,21 @@ async function loadOpenAI(env: ModelEnv): Promise<ModelInstance> {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     throw new Error(`加载 OpenAI 模型失败：${msg}（使用该厂商需先安装依赖: npm i openai）`)
+  }
+}
+
+async function loadOllama(env: ModelEnv): Promise<ModelInstance> {
+  try {
+    const { createOllama } = await import('ollama-ai-provider')
+    const { VercelModel } = await import('@strands-agents/sdk/models/vercel')
+    const baseURL = env.ollamaBaseURL ?? process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434/api'
+    const modelId = env.ollamaModelId ?? process.env.OLLAMA_MODEL_ID ?? 'qwen2.5:7b'
+    return new VercelModel({ provider: createOllama({ baseURL })(modelId) })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    throw new Error(
+      `加载 Ollama 模型失败：${msg}（使用该厂商需先安装依赖: npm i ollama-ai-provider，并确保本地 Ollama 服务在运行）`,
+    )
   }
 }
 

@@ -6,14 +6,16 @@
   "type": "module",
   "workspaces": [
     "packages/*",
-    "packages/agents/*"
+    "packages/agents/*",
+    "apps/*"
   ],
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "build": "npm run build -w @meimaohouse/agent-sdk && npm run build -w @meimaohouse/butler-core && npm run build -w @meimaohouse/chef-agent",
-    "demo": "npx tsx examples/butler-demo.ts"
+    "build": "npm run build -w @meimaohouse/agent-sdk && npm run build -w @meimaohouse/butler-core && npm run build -w @meimaohouse/chef-agent && npm run build -w @meimaohouse/butler-web",
+    "demo": "npx tsx examples/butler-demo.ts",
+    "web": "npm run build -w @meimaohouse/butler-web && npm run start -w @meimaohouse/butler-web"
   },
   "devDependencies": {
     "@types/node": "^20.17.0",

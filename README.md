@@ -36,17 +36,25 @@
 | `packages/butler-core` | 大管家核心：`Butler` 主类（chat / delegate / register）、管家 prompt |
 | `packages/agents/chef` | 示例子 Agent（厨房域）—— 新子 Agent 照此结构 |
 | `packages/agents/*` | 其余领域子 Agent（cleaner / appliance / shopping… 待开发） |
+| `apps/butler-web` | 大管家 Web 聊天界面 |
 
 ## 快速开始
 
 ```bash
 npm install
-cp .env.example .env   # 填入 MODEL_PROVIDER（openai / bedrock）；用 openai 需先 npm i openai
-npm run demo           # 人类 → 管家 → 厨师 → 汇报
+cp .env.example .env   # 填入 MODEL_PROVIDER（openai / bedrock / ollama）
+npm run demo           # CLI：人类 → 管家 → 厨师 → 汇报
+npm run web            # Web 界面：浏览器打开 http://127.0.0.1:8790
 ```
 
 入口先 `await configureModel()` 再 `new Butler(...)`（见 `examples/butler-demo.ts`）；
 未配置模型厂商时首次调用会快速失败并提示。
+
+### Web 界面
+
+`npm run web` 启动后打开 http://127.0.0.1:8790，即可在浏览器里和管家对话：
+- 顶部显示模型连接状态与子 Agent 花名册
+- 新子 Agent 在 `apps/butler-web/src/agents.ts` 加一行即可出现在界面
 
 ## 给子 Agent 开发者
 
