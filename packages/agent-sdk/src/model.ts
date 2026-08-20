@@ -16,7 +16,7 @@ import type { Model } from '@strands-agents/sdk'
 export type ModelInstance = Model
 
 export interface ModelEnv {
-  /** 厂商名：bedrock | openai | ollama（缺省读环境变量 MODEL_PROVIDER） */
+  /** 厂商名：bedrock | openai | deepseek | meimaoapi | ollama（缺省读环境变量 MODEL_PROVIDER） */
   provider?: string
   /** Bedrock 区域（缺省 AWS_REGION） */
   bedrockRegion?: string
@@ -24,6 +24,18 @@ export interface ModelEnv {
   bedrockModelId?: string
   /** OpenAI API Key（缺省 OPENAI_API_KEY） */
   openaiApiKey?: string
+  /** DeepSeek API Key（缺省 DEEPSEEK_API_KEY） */
+  deepseekApiKey?: string
+  /** DeepSeek 模型名（缺省 DEEPSEEK_MODEL_ID，默认 deepseek-chat） */
+  deepseekModelId?: string
+  /** DeepSeek 接口地址（缺省 https://api.deepseek.com） */
+  deepseekBaseURL?: string
+  /** meimaoapi API Key（缺省 MEIMAOAPI_API_KEY） */
+  meimaoapiApiKey?: string
+  /** meimaoapi 模型名（缺省 MEIMAOAPI_MODEL_ID，默认 deepseek-v4-flash） */
+  meimaoapiModelId?: string
+  /** meimaoapi 接口地址（缺省 https://meimaoapi.top/v1） */
+  meimaoapiBaseURL?: string
   /** Ollama 服务地址（缺省 OLLAMA_BASE_URL，默认 http://localhost:11434/api） */
   ollamaBaseURL?: string
   /** Ollama 模型名（缺省 OLLAMA_MODEL_ID） */
@@ -56,13 +68,17 @@ export async function createModel(env: ModelEnv = {}): Promise<ModelInstance> {
       return loadBedrock(env)
     case 'openai':
       return loadOpenAI(env)
+    case 'deepseek':
+      return loadDeepSeek(env)
+    case 'meimaoapi':
+      return loadMeimaoapi(env)
     case 'ollama':
       return loadOllama(env)
     case '':
       throw new ModelNotConfiguredError()
     default:
       throw new Error(
-        `未知模型厂商: "${provider}"（当前支持: bedrock, openai, ollama；其他厂商请扩展 createModel）`,
+        `未知模型厂商: "${provider}"（当前支持: bedrock, openai, deepseek, meimaoapi, ollama；其他厂商请扩展 createModel）`,
       )
   }
 }
@@ -101,6 +117,55 @@ async function loadOllama(env: ModelEnv): Promise<ModelInstance> {
     throw new Error(
       `加载 Ollama 模型失败：${msg}（使用该厂商需先安装依赖: npm i ollama-ai-provider，并确保本地 Ollama 服务在运行）`,
     )
+  }
+}
+
+/** DeepSeek：OpenAI 兼容接口，复用 OpenAIModel + 自定义 baseURL */
+async function loadDeepSeek(env: ModelEnv): Promise<ModelInstance> {
+  const apiKey = env.deepseekApiKey ?? process.env.DEEPSEEK_API_KEY
+  if (!apiKey) {
+    throw new Error('DeepSeek 厂商需要 DEEPSEEK_API_KEY 环境变量（或 createModel({ deepseekApiKey })）')
+  }
+  try {
+    const { OpenAIModel } = await import('@strands-agents/sdk/models/openai')
+    const baseURL = env.deepseekBaseURL ?? process.env.DEEPSEEK_BASE_URL ?? 'https://api.deepseek.com'
+    const modelId = env.deepseekModelId ?? process.env.DEEPSEEK_MODEL_ID ?? 'deepseek-chat'
+    return new OpenAIModel({
+      api: 'chat',
+      apiKey,
+      modelId,
+      clientConfig: { baseURL },
+    })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    throw new Error(`加载 DeepSeek 模型失败：${msg}`)
+  }
+}
+
+/** meimaoapi（眉猫 API）：OpenAI 兼容聚合接口，默认 deepseek-v4-flash */
+async function loadMeimaoapi(env: ModelEnv): Promise<ModelInstance> {
+  const apiKey = env.meimaoapiApiKey ?? process.env.MEIMAOAPI_API_KEY
+  if (!apiKey) {
+    throw new Error('meimaoapi 厂商需要 MEIMAOAPI_API_KEY 环境变量（或 createModel({ meimaoapiApiKey })）')
+  }
+  try {
+    const { OpenAIModel } = await import('@strands-agents/sdk/models/openai')
+    const baseURL = env.meimaoapiBaseURL ?? process.env.MEIMAOAPI_BASE_URL ?? 'https://meimaoapi.top/v1'
+    const modelId = env.meimaoapiModelId ?? process.env.MEIMAOAPI_MODEL_ID ?? 'deepseek-v4-flash'
+    return new OpenAIModel({
+      api: 'chat',
+      apiKey,
+      modelId,
+      maxTokens: 4096,
+      clientConfig: {
+        baseURL,
+        // meimaoapi 会拦截 OpenAI 官方 SDK 的 User-Agent，必须自定义
+        defaultHeaders: { 'User-Agent': 'meimao-house-butler/0.1' },
+      },
+    })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    throw new Error(`加载 meimaoapi 模型失败：${msg}`)
   }
 }
 

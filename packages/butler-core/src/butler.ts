@@ -71,12 +71,12 @@ export class Butler {
   }
 
   /**
-   * 人类对话入口：管家模型决策并调度子 Agent，返回转述结果。
+   * 人类对话入口：管家模型决策并调度子 Agent，返回转述结果（纯文本）。
    */
   async chat(message: string): Promise<string> {
     const agent = this.ensureAgent()
     const result = await agent.invoke(message)
-    return typeof result === 'string' ? result : JSON.stringify(result)
+    return extractReplyText(result)
   }
 
   /**
@@ -109,4 +109,24 @@ export class Butler {
     }
     return this.agent
   }
+}
+
+/** 从 SDK 的 invoke 结果中提取人类可读的纯文本 */
+function extractReplyText(result: unknown): string {
+  if (typeof result === 'string') return result
+  if (result && typeof result === 'object') {
+    const r = result as { lastMessage?: { content?: unknown } }
+    const content = r.lastMessage?.content
+    if (Array.isArray(content)) {
+      const texts = content
+        .map((block) =>
+          block && typeof block === 'object' && 'text' in block
+            ? String((block as { text: unknown }).text)
+            : '',
+        )
+        .filter(Boolean)
+      if (texts.length > 0) return texts.join('\n')
+    }
+  }
+  return JSON.stringify(result)
 }
