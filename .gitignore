@@ -3,3 +3,10 @@ dist/
 *.log
 .env
 .DS_Store
+data/
+*.db
+*.db-*
+
+# 本地备份与打包产物，不入库
+*.bak
+*.zip

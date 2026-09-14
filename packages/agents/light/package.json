@@ -1,0 +1,26 @@
+{
+  "name": "@meimaohouse/light-agent",
+  "version": "0.1.0",
+  "description": "灯光师 Agent（灯光域）：全屋灯具状态查询、开关/亮度/颜色/色温控制与批量控制",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@meimaohouse/agent-sdk": "*",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "typescript": "^5.6.0"
+  }
+}
