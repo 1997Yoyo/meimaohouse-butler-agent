@@ -6,3 +6,5 @@ dist/
 data/
 *.db
 *.db-*
+
+# 本地开发说明，不提交到 GitHub
